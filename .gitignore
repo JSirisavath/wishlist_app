@@ -1,0 +1,11 @@
+.vscode
+
+*.pyc
+
+__pycahe__
+
+.idea
+
+db.sqlite3
+
+djangoVenv

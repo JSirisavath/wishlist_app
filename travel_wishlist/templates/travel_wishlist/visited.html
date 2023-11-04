@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visited</title>
+  </head>
+  <body>
+    <div>
+      <h2>Places you have visited</h2>
+      {% if visited_places %}
+      <ul>
+        {% for visited_place in visited_places %}
+        <li>{{visited_place.name}}</li>
+        {% endfor %}
+      </ul>
+
+      <!-- If no visited places, then set to a message -->
+      {% else %}
+
+      <p>You have no places visited!</p>
+
+      {% endif %}
+    </div>
+
+    <!-- Link to home -->
+    <a href="{% url 'place_list' %}">You're wishlist</a>
+
+    <a href="{% url 'about' %}">About</a>
+  </body>
+</html>
