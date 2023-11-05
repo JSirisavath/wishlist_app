@@ -1,49 +1,40 @@
 <!-- From the views module, the requests to render the page with their request information to client will be shown here. In this case, a list of places users want to see/go to -->
+{% extends 'travel_wishlist/base.html' %} {% block content %}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wishlist Homepage</title>
-  </head>
-  <body>
-    <h2>Travel Wishlist</h2>
+<h2>Travel Wishlist</h2>
 
-    <!-- TO handle making a post request to save a new place to the site is by having the action be able to use "URL reversing", which means use and reference the name from urls.py (wishlist dir) 'place_list'.   -->
-    <form method="POST" action="{%url 'place_list'%}">
-      <!-- A token to prevent cross site forgery -->
-      {% csrf_token %}
+<!-- TO handle making a post request to save a new place to the site is by having the action be able to use "URL reversing", which means use and reference the name from urls.py (wishlist dir) 'place_list'.   -->
+<form method="POST" action="{%url 'place_list'%}">
+  <!-- A token to prevent cross site forgery -->
+  {% csrf_token %}
 
-      <!-- This creates the input fields -->
-      {{new_place}}
+  <!-- This creates the input fields -->
+  {{new_place_form}}
 
-      <button type="submit">Add</button>
-    </form>
+  <button id="add-new-place" type="submit">Add</button>
+</form>
 
-    {% for place in users_places %}
+{% for place in users_places %}
 
-    <div>
-      {{place.name}}
+<div class="wishlist-place">
+  <span id="place-name-{{place.pk}}" class="place-name">{{place.name}}</span>
 
-      <!-- Btn to add if place was visited -->
-      <!-- To make the btn handle the users' request and send it to the server, we would create a form tag with the method to POST to send in not only that specific place with the given place id argument powered by Django, but also move it to the Visited places URL, which is the action  -->
+  <!-- Btn to add if place was visited -->
+  <!-- To make the btn handle the users' request and send it to the server, we would create a form tag with the method to POST to send in not only that specific place with the given place id argument powered by Django, but also move it to the Visited places URL, which is the action  -->
 
-      <form method="POST" action="{% url 'place_was_visited' place.pk %}">
-        {% csrf_token %}
-        <button>Visited!</button>
-      </form>
-    </div>
+  <form
+    class="visited-form"
+    method="POST"
+    action="{% url 'place_was_visited' place.pk %}"
+  >
+    {% csrf_token %}
+    <button id="visited-button-{{place.pk}}">Visited!</button>
+  </form>
+</div>
 
-    <!-- If place list is empty, then display this p tag with text saying "You have no places in your wishlist" -->
-    {% empty %}
+<!-- If place list is empty, then display this p tag with text saying "You have no places in your wishlist" -->
+{% empty %}
 
-    <p>You have no places in your wishlist</p>
+<p>You have no places in your wishlist</p>
 
-    {% endfor %}
-
-    <a href="{% url 'places_visited' %}">Places you've visited</a>
-
-    <a href="{% url 'about' %}">About</a>
-  </body>
-</html>
+{% endfor %} {% endblock %}

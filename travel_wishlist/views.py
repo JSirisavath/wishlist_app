@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Place
 
 # Forms page
-from .forms import NewPlaceFrom
+from .forms import NewPlaceForm
 
 
 # This function will be called by django and give that function information what the  client requests it's making.
@@ -17,7 +17,7 @@ def place_list(request):
 
     if request.method == 'POST':
         # Make a new place form object from users request (A place to add which is a POST method, data from the page)
-        form = NewPlaceFrom(request.POST)
+        form = NewPlaceForm(request.POST)
 
         # Create a model place object from the form's req. data
         place = form.save()
@@ -37,11 +37,11 @@ def place_list(request):
 
     # Forms
 
-    new_place_form = NewPlaceFrom()  # To create HTML
+    new_place_form = NewPlaceForm()  # To create HTML
 
     # Render that request information by  sending that information to templates - The page the client sees
     # Clients req is recognized From travel_wishlist urls path in the 'wishlist' dir routing to urls.py in travel_wishlist dir routes to views.py (here) and then routes AND render to templates wishlist.html
-    return render(request, 'travel_wishlist/wishlist.html', {'users_places': users_places, 'new_place': new_place_form})
+    return render(request, 'travel_wishlist/wishlist.html', {'users_places': users_places, 'new_place_form': new_place_form})
 
 
 # Visited page
@@ -80,5 +80,5 @@ def place_was_visited(request, place_primary_key):
 
         place.save()  # Always need to save to db for any changes made
 
-    # Redirect to place list when with the request
-    return redirect('places_visited')
+    # Redirect to place list when the save request is finished
+    return redirect('place_list')
