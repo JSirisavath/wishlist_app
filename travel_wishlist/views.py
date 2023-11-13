@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Place
 
 # Forms page
-from .forms import NewPlaceForm
+from .forms import NewPlaceForm, TripReviewForm
 
 # Django's built-in Authorization log-in method
 from django.contrib.auth.decorators import login_required
@@ -12,10 +12,13 @@ from django.contrib.auth.decorators import login_required
 # Can't have users request anything they are not suppose to make
 from django.http import HttpResponseForbidden
 
+from django.contrib import messages
 
 # This function will be called by django and give that function information what the  client requests it's making.
 # Combine template and data here
 # Before any redirection to the html page for users, we want to make sure the decorator 'login-required' is required to all view functions before
+
+
 @login_required
 def place_list(request):
 
@@ -107,6 +110,29 @@ def place_was_visited(request, place_primary_key):
 @login_required
 def place_details(request, place_primary_key):
     place = get_object_or_404(Place, pk=place_primary_key)
+
+    # Does this place belong to the current user?
+
+    if place.user != request.user:
+        return HttpResponseForbidden()
+
+    # Is this a GET req? Or a POST req (update place)? or Both?
+
+    # If POST req, validate form data and update.
+
+    if request.method == 'POST':
+        # Make a new form object with users data. So, when users are essentially in the page for the place details, and if users sends in a POST request, we want to create a new form review object based on user's info
+        form = TripReviewForm(request.POST, request.FILES, instance=place)
+
+        # Check if form is valid
+        if form.is_valid():
+            form.save()
+            messages.info(request, "Trip Information Updates")
+
+        else:
+            return redirect('place_details', place_pk=place_primary_key)
+
+    # If GET, req, show place and form info
 
     return render(request, 'travel_wishlist/place_details.html', {'place_info': place})
 
