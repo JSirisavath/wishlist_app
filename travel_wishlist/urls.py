@@ -23,8 +23,10 @@ urlpatterns = [
 
     # Place id e.g({users_place}/{pk-int})
     # This is called 'enrapturing'
-    path('place/<int:place_primary_key>',
+    # urls.py
+    path('place/<int:place_primary_key>/',
          views.place_details, name='place_details'),
+
 
     # Delete place
     path('place/<int:place_primary_key>/delete',

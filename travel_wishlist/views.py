@@ -127,14 +127,25 @@ def place_details(request, place_primary_key):
         # Check if form is valid
         if form.is_valid():
             form.save()
-            messages.info(request, "Trip Information Updates")
+            messages.info(request, "Trip Information Updated")
 
         else:
-            return redirect('place_details', place_pk=place_primary_key)
+            # Gives an error message
+            messages.error(request, form.errors)
 
-    # If GET, req, show place and form info
+        return redirect('place_details', place_pk=place_primary_key)
 
-    return render(request, 'travel_wishlist/place_details.html', {'place_info': place})
+    # If GET, req, show place and form info (optional)
+
+    else:
+        # If the place has been visited, then create a new review form, which will be optional for users to have
+        if place.visited:
+            review_form = TripReviewForm(instance=place)
+            return render(request, 'travel_wishlist/place_details.html', {'place_info': place, 'review_form': review_form})
+        else:
+            # Else just render the html place details place
+            # MAKE SURE TO MATCH THE PLACE INSTANCE NAME(place_info) TO MATCH WITH THE HTML RENDERING. I SPENT NEARLY 1 HOUR TRYING TO FIGURE OUT WHY THE URL REVERSE MATCHING WAS NOT WORKING. I WENT BACK AND FORTH WITH MY CODE AND THE ORIGINAL REPO LOL
+            return render(request, 'travel_wishlist/place_details.html', {'place_info': place})
 
 
 @login_required

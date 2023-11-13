@@ -7,11 +7,52 @@
     {% if place_info.visited %}
     <p>You have visited {{place_info.name}}</p>
 
+    <h3>Notes</h3>
+    <!-- Django has the ability to leave default values if no other values are being placed -->
+    <p>{{place_info.notes|default:"No Notes..."}}</p>
+
+    <p>{{place_info.date_visited|default:"Date is not set..."}}</p>
+
+    <h3>Photo</h3>
+
+    {% if place_info.Photo %}
+    <!-- If there is any photos users want to upload -->
+    <img src="{{place_info.photo.url}}" />
+
+    {% else %}
+    <p>No Photo Uploaded...</p>
+
+    {% endif %}
+
+    <!-- Feedback -->
+    {% if messages %}
+    <div class="messsages">
+      {% for message in messages %}
+      <p>{{message}}</p>
+      {% endfor %}
+    </div>
+
+    {% endif %}
+    <!-- Tell form to expect image/binary data, non text based data  -->
+    <form
+      action="{% url 'place_details' place_info.pk %}"
+      method="POST"
+      enctype="multipart/form-data"
+    >
+      {% csrf_token %}
+
+      <!-- Display all tag forms for this form to be p tags, so will have breakpoints for each input  -->
+      {{review_form.as_p}}
+
+      <button type="submit">Save Review!</button>
+    </form>
+
     {% else %}
 
-    <p>You have not visited {{place_info.name}}</p>
+    <p>You have not visited {{place_info.name}} {{place_info.pk}}</p>
 
-    <form action="{% url 'place_was_visited' place_info.pk %}">
+    <form action="{% url 'place_was_visited' place_info.pk %}" method="POST">
+      <!-- <form action="{% url 'place_was_visited' place_info.pk %}" method="POST"> -->
       {% csrf_token %}
 
       <button type="submit" class="visited">Visited!</button>
