@@ -19,5 +19,14 @@ urlpatterns = [
 
 
     # About path
-    path('about', views.about, name='about')
+    path('about', views.about, name='about'),
+
+    # Place id e.g({users_place}/{pk-int})
+    # This is called 'enrapturing'
+    path('place/<int:place_primary_key>',
+         views.place_details, name='place_details'),
+
+    # Delete place
+    path('place/<int:place_primary_key>/delete',
+         views.delete_place, name='delete_place'),
 ]

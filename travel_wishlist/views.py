@@ -6,11 +6,17 @@ from .models import Place
 # Forms page
 from .forms import NewPlaceForm
 
+# Django's built-in Authorization log-in method
+from django.contrib.auth.decorators import login_required
+
+# Can't have users request anything they are not suppose to make
+from django.http import HttpResponseForbidden
+
 
 # This function will be called by django and give that function information what the  client requests it's making.
 # Combine template and data here
-
-
+# Before any redirection to the html page for users, we want to make sure the decorator 'login-required' is required to all view functions before
+@login_required
 def place_list(request):
 
     # Another way to handle POST requests, which makes a new place object form USING the existing  data requests, and then redirect users to the same page (Essentially reload ) and show the new place added
@@ -20,7 +26,11 @@ def place_list(request):
         form = NewPlaceForm(request.POST)
 
         # Create a model place object from the form's req. data
-        place = form.save()
+        # Get that data, but don't save/commit it yet
+        place = form.save(commit=False)
+
+        # Users request to be that user that is signed in
+        place.user = request.user
 
         # Validation - A method to check if the form is a good, then save the place and then "reload" the same page with the newly added place. This is against DB constraints
         if form.is_valid():
@@ -33,7 +43,8 @@ def place_list(request):
     # Places data from models
     # Django's ORM
     # We are using filter method and order_by method to filter only places that is not visited and sort them by name
-    users_places = Place.objects.filter(visited=False).order_by('name')
+    users_places = Place.objects.filter(
+        user=request.user).filter(visited=False).order_by('name')
 
     # Forms
 
@@ -45,6 +56,7 @@ def place_list(request):
 
 
 # Visited page
+@login_required
 def places_visited(request):
     visited = Place.objects.filter(visited=True)
 
@@ -54,6 +66,7 @@ def places_visited(request):
 
 
 # User requests for About information and will be routed to about.html
+@login_required
 def about(request):
 
     # Data to send to about page
@@ -68,6 +81,7 @@ def about(request):
 
 
 # This place was visited function will need to know the users request AND the primary key of that request of visited place
+@login_required
 def place_was_visited(request, place_primary_key):
     if request.method == 'POST':
         # Get that primary key from that object
@@ -75,10 +89,36 @@ def place_was_visited(request, place_primary_key):
 
         # A combined method from Django where get the object and that specific key-value pair or give back a status code 400 if not found. This is so if that place with that primary key is not found, the app wouldn't crash. Instead, it would give a status code 400
         place = get_object_or_404(Place, pk=place_primary_key)
+        # We want to check if the user is the same as the user who is making requests - For security check
+        if place.user == request.user:
+            place.visited = True
+            place.save()  # Always need to save to db for any changes made
 
-        place.visited = True
+        else:
 
-        place.save()  # Always need to save to db for any changes made
+            # If the requester is not the same as the "place_user"
+            return HttpResponseForbidden()
 
     # Redirect to place list when the save request is finished
     return redirect('place_list')
+
+
+# Place details for place detail page by getting that place primary id key
+@login_required
+def place_details(request, place_primary_key):
+    place = get_object_or_404(Place, pk=place_primary_key)
+
+    return render(request, 'travel_wishlist/place_details.html', {'place_info': place})
+
+
+@login_required
+def delete_place(request, place_primary_key):
+    place = get_object_or_404(Place, pk=place_primary_key)
+
+    if place.user == request.user:
+        place.delete()
+
+        # Redirect to the home page
+        return redirect('place_list')
+    else:
+        return HttpResponseForbidden()

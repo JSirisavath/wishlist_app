@@ -7,24 +7,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- watercss pre-developed CSS Styles -->
+    <!-- https://watercss.kognise.dev/#installation -->
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"
+    />
+
     <!-- Own Styles -->
     <link
       rel="stylesheet"
       href="{% static 'css/style.css' %}"
       type="text/css"
     />
-
-    <!-- watercss pre-developed CSS Styles -->
-    <!-- https://watercss.kognise.dev/#installation -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"
-    />
-
     <title>Travel Wishlist</title>
   </head>
 
-  <h1>Where do you want to go?</h1>
+  <h1 id="site-header">Where do you want to go?</h1>
   <body>
     <!-- Base html is practically a "template" for other pages to have access to. Such as headers, global fonts, colors, text, etc will be rendered on multiple different pages. Note, for pages that you want the base html to be applied to, you need to make sure that page has the "extends" tag on the top  -->
 
@@ -32,18 +32,18 @@
     {% block content %} {% endblock %}
 
     <div>
-      <p>A travel wishlist, build with Django</p>
+      <p>A travel wishlist, built with Django</p>
 
       <!-- Link to home -->
       <a class="nav-link" href="{% url 'place_list' %}">Your wishlist</a>
-
-      <!-- About page -->
-      <a class="nav-link" href="{% url 'about' %}">About</a>
 
       <!-- Places visited -->
       <a class="nav-link" href="{% url 'places_visited' %}"
         >Places you've visited</a
       >
+
+      <!-- About page -->
+      <a class="nav-link" href="{% url 'about' %}">About</a>
     </div>
   </body>
 </html>
