@@ -33,6 +33,8 @@
     </div>
 
     {% endif %}
+
+    <!-- Save review -->
     <!-- Tell form to expect image/binary data, non text based data  -->
     <form
       action="{% url 'place_details' place_info.pk %}"
@@ -49,7 +51,7 @@
 
     {% else %}
 
-    <p>You have not visited {{place_info.name}} {{place_info.pk}}</p>
+    <p>You have not visited {{place_info.name}}</p>
 
     <form action="{% url 'place_was_visited' place_info.pk %}" method="POST">
       <!-- <form action="{% url 'place_was_visited' place_info.pk %}" method="POST"> -->
@@ -61,6 +63,7 @@
     {% endif %}
   </div>
 
+  <!-- Submitting the delete place forms -->
   <div>
     <form action="{% url 'delete_place' place_info.pk %}" method="POST">
       {% csrf_token %}

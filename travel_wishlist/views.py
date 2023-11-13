@@ -133,7 +133,7 @@ def place_details(request, place_primary_key):
             # Gives an error message
             messages.error(request, form.errors)
 
-        return redirect('place_details', place_pk=place_primary_key)
+        return redirect('place_details', place_primary_key=place_primary_key)
 
     # If GET, req, show place and form info (optional)
 
