@@ -1,3 +1,5 @@
+from django.conf.urls.static import static
+from django.conf import settings
 from django.urls import include, path
 
 """
@@ -25,3 +27,9 @@ urlpatterns = [
     # Config requests to travel_wishlist dir's urls.py if req is not to admin page
     path('', include('travel_wishlist.urls'))
 ]
+
+
+# If the app is running in local machine, then add on these media roots in addition. I think the settings.DEBUG is from debug==true, which would only be in dev mode.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

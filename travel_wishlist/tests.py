@@ -1,148 +1,552 @@
+# from django.test import TestCase
+# from django.urls import reverse  # urls that we made to search for
+
+# from .models import Place  # test our db Place object
+
+# Original tests I wrote in the vids
+# class TestHomePage(TestCase):
+
+#     def test_home_page_shows_empty_list_message_for_empty_database(self):
+#         # Turn the url place list to an actual url a request can be made to
+#         home_page_url = reverse('place_list')
+
+#         # Self it is "this" test case, and then have the "client" make a request to get the url page using the application server
+#         response = self.client.get(home_page_url)
+
+#         # Assert template was used
+#         self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
+
+#         # Assert if the response contains the "no places in wishlist..." message
+#         self.assertContains(response, 'You have no places in your wishlist')
+
+
+# class TestWishList(TestCase):
+#     # List's of test places from fixture folder of JSON data off different visited and non visited place
+#     fixtures = ['test_places']
+
+#     def test_wishlist_contains_not_visited_places(self):
+
+#         # Another way to combine get request and reverse method
+#         response = self.client.get(reverse('place_list'))
+
+#         # Assert template was used
+#         # Check if wishlist.html was rendered
+#         self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
+
+#         # Check if response includes these places and are NOT VISITED YET, and so they will be on the wishlist homepage
+#         self.assertContains(response, 'Tokyo')
+#         self.assertContains(response, 'New York')
+
+#         # Making sure response DOES NOT CONTAIN these places in wishlist because they were visited
+#         self.assertNotContains(response, 'San Francisco')
+
+#         self.assertNotContains(response, 'Moab')
+
+
+# class TestNoPlacesVisited(TestCase):
+#     def test_visited_page_where_no_places_visited_message_is_present(self):
+
+#         # Place visited requests
+#         response = self.client.get(reverse('places_visited'))
+
+#         # Assert template was used
+#         # Check if visited.html was rendered
+#         self.assertTemplateUsed(response, 'travel_wishlist/visited.html')
+
+#         # Contains no visited place message based on my visited html page
+#         self.assertContains(response, 'You have no places visited!')
+
+
+# class TestVisitedPlaces(TestCase):
+#     fixtures = ['test_places']
+
+#     def test_visited_places_shown(self):
+
+#         # Another way to combine get request and reverse method
+#         response = self.client.get(reverse('places_visited'))
+
+#         # Assert template was used
+#         # Check if visited.html was rendered
+#         self.assertTemplateUsed(
+#             response, 'travel_wishlist/visited.html')
+
+#         # Check if response includes these places in visited page
+#         self.assertContains(response, 'Moab')
+#         self.assertContains(response, 'San Francisco')
+
+#         # Making sure response DOES NOT CONTAIN these places in visited because they are in  homepage, as these places are not visited yet (based on the test data)
+#         self.assertNotContains(response, 'Tokyo')
+
+#         self.assertNotContains(response, 'New York')
+
+
+# class TestAddNewPlace(TestCase):
+
+#     def test_add_new_unvisited_place(self):
+#         # Test dummy data
+#         new_place_data = {'name': 'Tokyo', 'visited': False}
+
+#         #  Follow = True, data is saved and redirected to homepage.
+#         # So 2 requests are technically made, and so we need to tell the  test to redirect to place list page after saving data with that newly added test data on there
+#         response = self.client.post(
+#             reverse('place_list'), new_place_data, follow=True)
+
+#         self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
+
+#         # Response.context is a method that returns the value of that place, essentially the "payload" or in other words, data that is being sent through to html. "users_places" is from views.py, which is from the key pair value Place object
+#         response_places = response.context['users_places']
+
+#         self.assertEqual(1, len(response_places))  # Check only one place
+
+#         tokyo_from_response = response_places[0]  # The first place
+
+#         tokyo_from_database = Place.objects.get(name='Tokyo', visited=False)
+
+#         # Check if the response (data response from template) and the  data from db is equal to each other
+
+#         self.assertEqual(tokyo_from_database, tokyo_from_response)
+
+
+# class TestVisitPlace(TestCase):
+#     fixtures = ['test_places']
+
+#     # Testing the action where adding place to visit checkbox
+#     def test_visit_place_added(self):
+
+#         # Data to provide to the url req
+#         # The primary key for Tokyo based on the dummy data
+#         visit_place_url = reverse('place_was_visited', args=(1,))  # Tokyo
+
+#         response = self.client.post(visit_place_url, follow=True)
+
+#         # Make sure if you redirected to a different html page, teh assert template used knows this!
+#         self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
+
+#         # Tokyo will be to visited, meaning it will be out of wishlist.html
+#         self.assertNotContains(response, 'Tokyo')
+
+#         # New York will still be in wishlist
+#         self.assertContains(response, 'New York')
+
+#         tokyo_from_db = Place.objects.get(pk=1)
+
+#         # Check of Tokyo from DB is visited
+#         self.assertTrue(tokyo_from_db.visited)
+
+#         # Non Existent place method
+
+#     def test_non_existent_place(self):
+
+#         #  Non existent primary key
+#         visit_nonexistent_place_url = reverse(
+#             'place_was_visited', args=(123456,))
+
+#         response = self.client.post(
+#             visit_nonexistent_place_url, follow=True)
+
+#         # The status code should be 404, which is a non existent code and we want to make sure that request statues matches with the test response code too.
+#         self.assertEqual(404, response.status_code)
+
+
+# From GH
+import tempfile
+import filecmp
+import os
+
 from django.test import TestCase
-from django.urls import reverse  # urls that we made to search for
+from django.urls import reverse
+from django.test import override_settings
 
-from .models import Place  # test our db Place object
+from django.contrib.auth.models import User
+from .models import Place
+
+from PIL import Image
 
 
-class TestHomePage(TestCase):
+class TestViewHomePageIsEmptyList(TestCase):
 
-    def test_home_page_shows_empty_list_message_for_empty_database(self):
-        # Turn the url place list to an actual url a request can be made to
-        home_page_url = reverse('place_list')
+    fixtures = ['test_users']
 
-        # Self it is "this" test case, and then have the "client" make a request to get the url page using the application server
-        response = self.client.get(home_page_url)
+    def setUp(self):
+        user = User.objects.get(pk=1)
+        self.client.force_login(user)
 
-        # Assert template was used
+    def test_load_wishlist_page_shows_empty_list(self):
+        response = self.client.get(reverse('place_list'))
         self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
+        self.assertEquals(0, len(response.context['places']))
 
-        # Assert if the response contains the "no places in wishlist..." message
-        self.assertContains(response, 'You have no places in your wishlist')
+    def test_load_visted_page_shows_empty_list(self):
+        response = self.client.get(reverse('places_visited'))
+        self.assertTemplateUsed(response, 'travel_wishlist/visited.html')
+        self.assertEquals(0, len(response.context['visited']))
 
 
 class TestWishList(TestCase):
-    # List's of test places from fixture folder of JSON data off different visited and non visited place
-    fixtures = ['test_places']
 
-    def test_wishlist_contains_not_visited_places(self):
+    # Load this data into the database for all of the tests in this class
+    fixtures = ['test_places', 'test_users']
 
-        # Another way to combine get request and reverse method
+    def setUp(self):
+        self.user = User.objects.get(pk=1)
+        self.client.force_login(self.user)
+
+    def test_view_wishlist(self):
         response = self.client.get(reverse('place_list'))
-
-        # Assert template was used
-        # Check if wishlist.html was rendered
+        # Check correct template was used
         self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
 
-        # Check if response includes these places and are NOT VISITED YET, and so they will be on the wishlist homepage
-        self.assertContains(response, 'Tokyo')
-        self.assertContains(response, 'New York')
+        # What data was sent to the template?
+        data_rendered = list(response.context['places'])
+        # What data is in the database? Get all of the items for this user where visited = False
+        data_expected = list(Place.objects.filter(
+            user=self.user).filter(visited=False))
 
-        # Making sure response DOES NOT CONTAIN these places in wishlist because they were visited
-        self.assertNotContains(response, 'San Francisco')
+        # Is it the same?
+        self.assertCountEqual(data_rendered, data_expected)
 
-        self.assertNotContains(response, 'Moab')
-
-
-class TestNoPlacesVisited(TestCase):
-    def test_visited_page_where_no_places_visited_message_is_present(self):
-
-        # Place visited requests
+    def test_view_places_visited(self):
         response = self.client.get(reverse('places_visited'))
-
-        # Assert template was used
-        # Check if visited.html was rendered
+        # Check correct template was used
         self.assertTemplateUsed(response, 'travel_wishlist/visited.html')
 
-        # Contains no visited place message based on my visited html page
-        self.assertContains(response, 'You have no places visited!')
-
-
-class TestVisitedPlaces(TestCase):
-    fixtures = ['test_places']
-
-    def test_visited_places_shown(self):
-
-        # Another way to combine get request and reverse method
-        response = self.client.get(reverse('places_visited'))
-
-        # Assert template was used
-        # Check if visited.html was rendered
-        self.assertTemplateUsed(
-            response, 'travel_wishlist/visited.html')
-
-        # Check if response includes these places in visited page
-        self.assertContains(response, 'Moab')
-        self.assertContains(response, 'San Francisco')
-
-        # Making sure response DOES NOT CONTAIN these places in visited because they are in  homepage, as these places are not visited yet (based on the test data)
-        self.assertNotContains(response, 'Tokyo')
-
-        self.assertNotContains(response, 'New York')
+        # What data was sent to the template?
+        data_rendered = list(response.context['visited'])
+        # What data is in the database? Get all of the items where visited = false
+        data_expected = list(Place.objects.filter(
+            user=self.user).filter(visited=True))
+        # Is it the same?
+        self.assertCountEqual(data_rendered, data_expected)
 
 
 class TestAddNewPlace(TestCase):
 
-    def test_add_new_unvisited_place(self):
-        # Test dummy data
-        new_place_data = {'name': 'Tokyo', 'visited': False}
+    # Load this data into the database for all of the tests in this class
+    fixtures = ['test_users']
 
-        #  Follow = True, data is saved and redirected to homepage.
-        # So 2 requests are technically made, and so we need to tell the  test to redirect to place list page after saving data with that newly added test data on there
-        response = self.client.post(
-            reverse('place_list'), new_place_data, follow=True)
+    def setUp(self):
+        user = User.objects.get(pk=1)
+        self.client.force_login(user)
 
+    def test_add_new_unvisited_place_to_wishlist(self):
+
+        response = self.client.post(reverse('place_list'), {
+                                    'name': 'Tokyo', 'visited': False}, follow=True)
+
+        # Check correct template was used
         self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
 
-        # Response.context is a method that returns the value of that place, essentially the "payload" or in other words, data that is being sent through to html. "users_places" is from views.py, which is from the key pair value Place object
-        response_places = response.context['users_places']
+        # What data was used to populate the template?
+        response_places = response.context['places']
+        # Should be 1 item
+        self.assertEqual(len(response_places), 1)
+        tokyo_response = response_places[0]
 
-        self.assertEqual(1, len(response_places))  # Check only one place
+        # Expect this data to be in the database. Use get() to get data with
+        # the values expected. Will throw an exception if no data, or more than
+        # one row, matches. Remember throwing an exception will cause this test to fail
+        tokyo_in_database = Place.objects.get(name="Tokyo", visited=False)
 
-        tokyo_from_response = response_places[0]  # The first place
+        # Is the data used to render the template, the same as the data in the database?
+        self.assertEqual(tokyo_response, tokyo_in_database)
 
-        tokyo_from_database = Place.objects.get(name='Tokyo', visited=False)
+        # And add another place - still works?
+        response = self.client.post(reverse('place_list'), {
+                                    'name': 'Yosemite', 'visited': False}, follow=True)
 
-        # Check if the response (data response from template) and the  data from db is equal to each other
-
-        self.assertEqual(tokyo_from_database, tokyo_from_response)
-
-
-class TestVisitPlace(TestCase):
-    fixtures = ['test_places']
-
-    # Testing the action where adding place to visit checkbox
-    def test_visit_place_added(self):
-
-        # Data to provide to the url req
-        # The primary key for Tokyo based on the dummy data
-        visit_place_url = reverse('place_was_visited', args=(1,))  # Tokyo
-
-        response = self.client.post(visit_place_url, follow=True)
-
-        # Make sure if you redirected to a different html page, teh assert template used knows this!
+        # Check correct template was used
         self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
 
-        # Tokyo will be to visited, meaning it will be out of wishlist.html
-        self.assertNotContains(response, 'Tokyo')
+        # What data was used to populate the template?
+        response_places = response.context['places']
+        # Should be 2 items
+        self.assertEqual(len(response_places), 2)
 
-        # New York will still be in wishlist
-        self.assertContains(response, 'New York')
+        # Expect this data to be in the database. Use get() to get data with
+        # the values expected. Will throw an exception if no data, or more than
+        # one row, matches. Remember throwing an exception will cause this test to fail
+        place_in_database = Place.objects.get(name="Yosemite", visited=False)
+        place_in_database = Place.objects.get(name="Tokyo", visited=False)
 
-        tokyo_from_db = Place.objects.get(pk=1)
+        places_in_database = Place.objects.all()  # Get all data
 
-        # Check of Tokyo from DB is visited
-        self.assertTrue(tokyo_from_db.visited)
+        # Is the data used to render the template, the same as the data in the database?
+        self.assertCountEqual(list(places_in_database), list(response_places))
 
-        # Non Existent place method
+    def test_add_new_visited_place_to_wishlist(self):
 
-    def test_non_existent_place(self):
+        response = self.client.post(reverse('place_list'), {
+                                    'name': 'Tokyo', 'visited': True}, follow=True)
 
-        #  Non existent primary key
-        visit_nonexistent_place_url = reverse(
-            'place_was_visited', args=(123456,))
+        # Check correct template was used
+        self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
+
+        # What data was used to populate the template?
+        response_places = response.context['places']
+        # Should be 0 items - have not added any un-visited places
+        self.assertEqual(len(response_places), 0)
+
+        # Expect this data to be in the database. Use get() to get data with
+        # the values expected. Will throw an exception if no data, or more than
+        # one row, matches. Remember throwing an exception will cause this test to fail
+        place_in_database = Place.objects.get(name="Tokyo", visited=True)
+
+
+class TestMarkPlaceAsVisited(TestCase):
+
+    fixtures = ['test_places', 'test_users']
+
+    def setUp(self):
+        self.user = User.objects.get(pk=1)
+        self.client.force_login(self.user)
+
+    def test_mark_unvisited_place_as_visited(self):
 
         response = self.client.post(
-            visit_nonexistent_place_url, follow=True)
+            reverse('place_was_visited', args=(2,)), follow=True)
+        # Assert redirected to place list
+        self.assertTemplateUsed(response, 'travel_wishlist/wishlist.html')
 
-        # The status code should be 404, which is a non existent code and we want to make sure that request statues matches with the test response code too.
+        # Check database for correct data
+        place = Place.objects.get(pk=2)
+        self.assertTrue(place.visited)
+
+    def test_mark_non_existent_place_as_visited_returns_404(self):
+        response = self.client.post(
+            reverse('place_was_visited', args=(200,)), follow=True)
         self.assertEqual(404, response.status_code)
+
+    def test_visit_someone_else_place_not_authorized(self):
+        response = self.client.post(
+            reverse('place_was_visited', args=(5,)), follow=True)
+        self.assertEqual(403, response.status_code)  # 403 Forbidden
+
+
+class TestDeletePlace(TestCase):
+
+    fixtures = ['test_places', 'test_users']
+
+    def setUp(self):
+        user = User.objects.first()
+        self.client.force_login(user)
+
+    def test_delete_own_place(self):
+        response = self.client.post(
+            reverse('delete_place', args=(2,)), follow=True)
+        place_2 = Place.objects.filter(pk=2).first()
+        self.assertIsNone(place_2)   # place is deleted
+
+    def test_delete_someone_else_place_not_auth(self):
+        response = self.client.post(
+            reverse('delete_place',  args=(5,)), follow=True)
+        self.assertEqual(403, response.status_code)
+        place_5 = Place.objects.get(pk=5)
+        self.assertIsNotNone(place_5)    # place still in database
+
+
+class TestPlaceDetail(TestCase):
+    # Load this data into the database for all of the tests in this class
+    fixtures = ['test_places', 'test_users']
+
+    def setUp(self):
+        user = User.objects.get(pk=1)
+        self.client.force_login(user)
+
+    def test_modify_someone_else_place_details_not_authorized(self):
+        response = self.client.post(reverse('place_details', kwargs={'place_pk': 5}), {
+                                    'notes': 'awesome'}, follow=True)
+        self.assertEqual(403, response.status_code)   # 403 Forbidden
+
+    def test_place_detail(self):
+        place_1 = Place.objects.get(pk=1)
+
+        response = self.client.get(
+            reverse('place_details', kwargs={'place_pk': 1}))
+        # Check correct template was used
+        self.assertTemplateUsed(response, 'travel_wishlist/place_detail.html')
+
+        # What data was sent to the template?
+        data_rendered = response.context['place']
+
+        # Same as data sent to template?
+        self.assertEqual(data_rendered, place_1)
+
+        # and correct data shown on page?
+
+        self.assertContains(response, 'Tokyo')
+        self.assertContains(response, 'cool')
+        self.assertContains(response, '2014-01-01')
+
+        # TODO how to test correct image is shown?
+
+    def test_modify_notes(self):
+
+        response = self.client.post(reverse('place_details', kwargs={'place_pk': 1}), {
+                                    'notes': 'awesome'}, follow=True)
+
+        updated_place_1 = Place.objects.get(pk=1)
+
+        # db updated?
+        self.assertEqual('awesome', updated_place_1.notes)
+
+        self.assertEqual(response.context['place'], updated_place_1)
+        # Check correct template was used
+        self.assertTemplateUsed(response, 'travel_wishlist/place_detail.html')
+
+        # and correct data shown on page?
+        self.assertNotContains(response, 'cool')  # old text is gone
+        self.assertContains(response, 'awesome')  # new text shown
+
+    def test_add_notes(self):
+
+        response = self.client.post(reverse('place_details', kwargs={'place_pk': 4}), {
+                                    'notes': 'yay'}, follow=True)
+
+        updated_place_4 = Place.objects.get(pk=4)
+
+        # db updated?
+        self.assertEqual('yay', updated_place_4.notes)
+
+        # Correct object used in response?
+        self.assertEqual(response.context['place'], updated_place_4)
+        # Check correct template was used
+        self.assertTemplateUsed(response, 'travel_wishlist/place_detail.html')
+
+        # and correct data shown on page?
+        self.assertContains(response, 'yay')  # new text shown
+
+    def test_add_date_visited(self):
+
+        date_visited = '2014-01-01'
+
+        response = self.client.post(reverse('place_details', kwargs={'place_pk': 4}), {
+                                    'date_visited': date_visited}, follow=True)
+
+        updated_place_4 = Place.objects.get(pk=4)
+
+        # Database updated correctly?
+        self.assertEqual(updated_place_4.date_visited.isoformat(),
+                         date_visited)   # .isoformat is YYYY-MM-DD
+
+        # Right object sent to template?
+        self.assertEqual(response.context['place'], updated_place_4)
+
+        # Check correct template was used
+        self.assertTemplateUsed(response, 'travel_wishlist/place_detail.html')
+
+        # and correct data shown on page?
+        self.assertContains(response, date_visited)  # new text shown
+
+
+class TestImageUpload(TestCase):
+
+    fixtures = ['test_users', 'test_places']
+
+    def setUp(self):
+        user = User.objects.get(pk=1)
+        self.client.force_login(user)
+        self.MEDIA_ROOT = tempfile.mkdtemp()
+
+    def create_temp_image_file(self):
+        handle, tmp_img_file = tempfile.mkstemp(suffix='.jpg')
+        img = Image.new('RGB', (10, 10))
+        img.save(tmp_img_file, format='JPEG')
+        return tmp_img_file
+
+    def test_upload_new_image_for_own_place(self):
+
+        img_file_path = self.create_temp_image_file()
+
+        with self.settings(MEDIA_ROOT=self.MEDIA_ROOT):
+
+            with open(img_file_path, 'rb') as img_file:
+                resp = self.client.post(reverse('place_details', kwargs={'place_pk': 1}), {
+                                        'photo': img_file}, follow=True)
+
+                self.assertEqual(200, resp.status_code)
+
+                place_1 = Place.objects.get(pk=1)
+                img_file_name = os.path.basename(img_file_path)
+                expected_uploaded_file_path = os.path.join(
+                    self.MEDIA_ROOT, 'user_images', img_file_name)
+                self.assertTrue(os.path.exists(expected_uploaded_file_path))
+                self.assertIsNotNone(place_1.photo)
+                self.assertTrue(filecmp.cmp(
+                    img_file_path,  expected_uploaded_file_path))
+
+    def test_change_image_for_own_place_expect_old_deleted(self):
+
+        first_img_file_path = self.create_temp_image_file()
+        second_img_file_path = self.create_temp_image_file()
+
+        with self.settings(MEDIA_ROOT=self.MEDIA_ROOT):
+
+            with open(first_img_file_path, 'rb') as first_img_file:
+
+                resp = self.client.post(reverse('place_details', kwargs={'place_pk': 1}), {
+                                        'photo': first_img_file}, follow=True)
+
+                place_1 = Place.objects.get(pk=1)
+
+                first_uploaded_image = place_1.photo.name
+
+                with open(second_img_file_path, 'rb') as second_img_file:
+                    resp = self.client.post(reverse('place_details', kwargs={'place_pk': 1}), {
+                                            'photo': second_img_file}, follow=True)
+
+                    # first file should not exist
+                    # second file should exist
+
+                    place_1 = Place.objects.get(pk=1)
+
+                    second_uploaded_image = place_1.photo.name
+
+                    first_path = os.path.join(
+                        self.MEDIA_ROOT, first_uploaded_image)
+                    second_path = os.path.join(
+                        self.MEDIA_ROOT, second_uploaded_image)
+
+                    self.assertFalse(os.path.exists(first_path))
+                    self.assertTrue(os.path.exists(second_path))
+
+    def test_upload_image_for_someone_else_place(self):
+
+        with self.settings(MEDIA_ROOT=self.MEDIA_ROOT):
+
+            img_file = self.create_temp_image_file()
+            with open(img_file, 'rb') as image:
+                resp = self.client.post(reverse('place_details', kwargs={'place_pk': 5}), {
+                                        'photo': image}, follow=True)
+                self.assertEqual(403, resp.status_code)
+
+                place_5 = Place.objects.get(pk=5)
+                self.assertFalse(place_5.photo)   # no photo set
+
+    def test_delete_place_with_image_image_deleted(self):
+
+        img_file_path = self.create_temp_image_file()
+
+        with self.settings(MEDIA_ROOT=self.MEDIA_ROOT):
+
+            with open(img_file_path, 'rb') as img_file:
+                resp = self.client.post(reverse('place_details', kwargs={'place_pk': 1}), {
+                                        'photo': img_file}, follow=True)
+
+                self.assertEqual(200, resp.status_code)
+
+                place_1 = Place.objects.get(pk=1)
+                img_file_name = os.path.basename(img_file_path)
+
+                uploaded_file_path = os.path.join(
+                    self.MEDIA_ROOT, 'user_images', img_file_name)
+
+                # the image is there
+                self.assertTrue(os.path.exists(uploaded_file_path))
+
+                # delete place 1
+
+                place_1 = Place.objects.get(pk=1)
+                place_1.delete()
+
+                # and has been deleted
+                self.assertFalse(os.path.exists(uploaded_file_path))
