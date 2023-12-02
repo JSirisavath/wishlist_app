@@ -21,10 +21,14 @@
       href="{% static 'css/style.css' %}"
       type="text/css"
     />
+
+    <!-- Thumbnail picture -->
+    <link rel="icon" type="image/x-icon" href="{% static 'img/travel.png' %}">
+
     <title>Travel Wishlist</title>
   </head>
 
-  <h1 id="site-header">Where do you want to go?</h1>
+  <h1 id="site-header" style="background: url('{% static 'img/headerPic.jpeg' %}')">Where do you want to go?</h1>
   <body>
     <!-- Base html is practically a "template" for other pages to have access to. Such as headers, global fonts, colors, text, etc will be rendered on multiple different pages. Note, for pages that you want the base html to be applied to, you need to make sure that page has the "extends" tag on the top  -->
 

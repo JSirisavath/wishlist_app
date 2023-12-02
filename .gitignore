@@ -9,3 +9,7 @@ __pycahe__
 db.sqlite3
 
 djangoVenv
+
+app.yaml
+
+travel_creds.json
