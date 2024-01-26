@@ -62,11 +62,12 @@ To run the Travel Wishlist App:
     class Meta:
         model = Place
         fields = ('name', 'visited')`
+  - The Meta class inside the ModelForm class is where I specify this relationship and configure certain aspects of the form. So the forms know what models it is working with, in this case, the place model class.
 
 Screenshot of how the database looks with a few places stored in SQLite3 DB: 
 
 <img width="805" alt="Screenshot 2024-01-26 at 12 36 48 PM" src="https://github.com/JSirisavath/wishlist_app/assets/122318778/388cafa3-5369-4cda-be4f-289fc50a9ef0">
-The Meta class inside the ModelForm class is where I specify this relationship and configure certain aspects of the form. So the forms know what models it is working with, in this case, the place model class.
+
 
 - **Unit and Functional Tests** I decided to add unit tests to test out different key functions in the view and also functional tests within the browser using the Selenium web driver Chrome. However, few tests does not work or function such as the functional tests. There are a few issues that I would need to review and revise.
 
